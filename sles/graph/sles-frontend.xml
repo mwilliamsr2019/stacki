@@ -48,6 +48,7 @@
 	<edge from="server">
 		<to>base</to>
 		<to>ca</to>
+		<to>checklist</to>
 		<to>dhcp-server</to>
 		<to>firewall-base</to>
 		<to>firewall-server</to>

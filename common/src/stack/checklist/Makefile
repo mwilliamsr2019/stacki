@@ -7,6 +7,8 @@ DEPENDS.DIR = pylib init.d systemd
 
 include $(STACKBUILD)/etc/CCRules.mk
 
+bootstrap: install-rpm
+
 build:
 
 install::

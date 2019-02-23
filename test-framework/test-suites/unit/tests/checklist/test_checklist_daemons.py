@@ -1,10 +1,14 @@
+import json
 import pytest
 import queue
-from stack.checklist import State, StateMessage
-from stack.checklist.threads import MQProcessor, InstallHashProcessor, LogParser, BackendExec, CheckTimeouts
+import socket
+from stack.checklist import Backend, State, StateMessage
+from stack.checklist.threads import MQProcessor, InstallHashProcessor, LogParser, BackendExec, CheckTimeouts, GlobalQueueAdder
 import stack.util
 from subprocess import Popen
+import threading
 import time
+import zmq
 
 class TestChecklistDaemons:
 
@@ -71,7 +75,8 @@ class TestChecklistDaemons:
 		logParser.daemon = True
 		logParser.start()
 		s = '8.8.8.8 - - [02/Oct/2018:17:22:56 +0000] "GET ' \
-			'/install/sbin/profile.cgi?os=sles&arch=x86_64&np=4 HTTP/1.1" 200 51261'
+			'/install/sbin/profile.cgi?os=sles&arch=x86_64' \
+			'&np=4 HTTP/1.1" 200 51261'
 		expectedStMsg = StateMessage('8.8.8.8', State.Autoyast_Sent,
 			False, time.time())
 
@@ -84,11 +89,10 @@ class TestChecklistDaemons:
 				break
 		logParser.shutdownFlag.set()
 
-		while not q.empty():
+		while not matchedFlag and not q.empty():
 			sm = q.get()
 			if sm.isEqual(expectedStMsg):
 				matchedFlag = True
-				break
 
 		assert matchedFlag == True
 
@@ -98,7 +102,8 @@ class TestChecklistDaemons:
 		logParser.daemon = True
 		logParser.start()
 		s = '8.8.8.8 - - [14/Feb/2019:21:23:55 +0000] "GET ' \
-			'/install/pallets/SLES/12/sp3/sles/x86_64/boot/x86_64/cracklib-dict-full.rpm' \
+			'/install/pallets/SLES/12/sp3/sles/x86_64/boot/' \
+			'x86_64/cracklib-dict-full.rpm' \
 			' HTTP/1.1" 200 3257877 "-" "-"'
 		expectedStMsg = StateMessage('8.8.8.8',State.Cracklib_Dict_Sent,
 			False, time.time())
@@ -112,10 +117,97 @@ class TestChecklistDaemons:
 				break
 		logParser.shutdownFlag.set()
 
-		while not q.empty():
+		while not matchedFlag and not q.empty():
 			sm = q.get()
 			if sm.isEqual(expectedStMsg):
 				matchedFlag = True
-				break
+
+		assert matchedFlag == True
+
+	def test_GlobalQueueAdder(self):
+		localQ  = queue.Queue()
+		globalQ = queue.Queue()
+		qAdder = GlobalQueueAdder(localQ, globalQ)
+		qAdder.daemon = True
+		qAdder.start()
+		sm = StateMessage('8.8.8.8', State.Cracklib_Dict_Sent,
+			False, time.time())
+		localQ.put(sm)
+		sm1 = globalQ.get()
+		matchedFlag = False
+
+		if sm.isEqual(sm1):
+			matchedFlag = True
+
+		qAdder.shutdownFlag.set()
+		assert matchedFlag == True
+
+	def test_MQProcessors(self):
+		q = queue.Queue()
+		context = zmq.Context()
+		tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		mq = MQProcessor(context, tx, q)
+		mq.setDaemon(True)
+		mq.start()
+		sm = None
+		payload = {}
+		payload['systest'] = "Partition_XML_Present"
+		payload['flag'] = "False"
+		payload['msg'] = "Backend - /tmp/partition.xml - Present"
+		msg = stack.mq.Message(json.dumps(payload), channel='health', ttl=120)
+		msg.setSource('8.8.8.8')
+		msg.setTime(time.asctime())
+
+		mq.process(msg)
+
+		while not sm and not mq.localQ.empty():
+			sm = mq.localQ.get()
+
+		while not sm and not q.empty():
+			sm = q.get()
+
+		expectedSm = StateMessage('8.8.8.8', State.Partition_XML_Present,
+			False, time.time(),
+			msg='Backend - /tmp/partition.xml - Present')
+		matchedFlag = False
+		if sm.isEqual(expectedSm):
+			matchedFlag = True
+		tx.close()
+
+		assert matchedFlag == True
+
+	def test_InstallHashProcessor(self):
+		q = queue.Queue()
+		context = zmq.Context()
+		tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		iHProc = InstallHashProcessor(context, tx, q)
+		iHProc.setDaemon(True)
+		iHProc.start()
+		sm = None
+		payload = []
+		l1 = {'hash':'ab2aad095f3bdf545e0aca5cfd1617af', 'name':'stacki'}
+		l2 = {'hash':'53b5479a9e9993070eb8d6a2b42f735d', 'name': 'SLES'}
+		l3 = {'hash':'3405f361f4569341bc9f8a922eafe00d','name': 'profile'}
+		payload.append(l1)
+		payload.append(l2)
+		payload.append(l3)
+
+		msg = stack.mq.Message(payload, channel='installhash', ttl=120)
+		msg.setSource('8.8.8.8')
+		msg.setTime(time.asctime())
+		iHProc.process(msg)
+
+		while not sm and not q.empty():
+			sm = q.get()
+
+		expectedSm = StateMessage('8.8.8.8', State.Reboot_Okay,
+			False, time.time(),
+			msg='InstallHash - stacki : ab2aad095f3bdf545e0aca5cfd1617af;' \
+				' InstallHash - SLES : 53b5479a9e9993070eb8d6a2b42f735d;' \
+				' InstallHash - profile : 3405f361f4569341bc9f8a922eafe00d')
+		matchedFlag = False
+		if sm.isEqual(expectedSm):
+			matchedFlag = True
+		tx.close()
 
 		assert matchedFlag == True

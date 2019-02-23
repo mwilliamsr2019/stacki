@@ -89,11 +89,11 @@ class TestStateMessage:
 	def test_isEqual(self):
 		sm1 = StateMessage('10.25.241.111', State.DHCPDISCOVER, False, time.time())
 		sm2 = StateMessage('10.25.241.111', State.Autoyast_Sent, False, time.time())
-		assert sm1.isEqual(sm2) == False
+		assert sm1 != sm2
 
 		sm3 = StateMessage('10.25.241.111', State.Set_Bootaction_OS, True, time.time())
 		sm4 = StateMessage('10.25.241.111', State.Set_Bootaction_OS, False, time.time())
-		assert sm3.isEqual(sm4) == False
+		assert sm3 != sm4
 
 		sm3.isError = False
-		assert sm3.isEqual(sm4) == True
+		assert sm3 == sm4

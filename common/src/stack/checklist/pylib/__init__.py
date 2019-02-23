@@ -148,7 +148,7 @@ class StateMessage:
 		return print_str
 
 	# Check if all attributes except isAddedToRedis, time is equal
-	def isEqual(self, sm):
+	def __eq__(self, sm):
 		if self.ipAddr == sm.ipAddr and \
 			self.state == sm.state and \
 			self.msg == sm.msg and \

@@ -186,7 +186,7 @@ class Checklist(threading.Thread):
 		for s in backend.dhcpStateArr:
 			d = int(sm.time - s.time)
 
-			if 0 < d < 5:
+			if 0 <= d < 5:
 				backend.stateArr.append(s)
 				clearFlag = True
 				if index == -1:
@@ -266,7 +266,7 @@ class Checklist(threading.Thread):
 				# If this is a timeout message but it was successful
 				# earlier then drop the timeout message
 				#
-				if (len(stateList) > 0 and sm.isEqual(stateList[-1])) or \
+				if (len(stateList) > 0 and sm == stateList[-1]) or \
 					(Checklist.TIMEOUT_STR in sm.msg and \
 					backend.isKnownState(sm.state)):
 					continue

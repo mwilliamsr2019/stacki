@@ -10,8 +10,8 @@ class TestChecklistMain:
 	def test_getBackendByMac(self):
 		sys.path.append('/opt/stack/bin')
 		c = Checklist()
-		b  = Backend('host-8', 'default', 'default')
-		b1 = Backend('host-9', 'default', 'default')
+		b  = Backend('host-8', 'default', 'default', 'sles')
+		b1 = Backend('host-9', 'default', 'default', 'sles')
 		b.macList = ['aa:bb:aa:aa:bb:aa']
 		b.ipList  = ['8.8.8.8']
 		b1.macList = ['aa:bb:aa:aa:bb:ee']
@@ -24,8 +24,8 @@ class TestChecklistMain:
 	def test_processTftp(self):
 		sys.path.append('/opt/stack/bin')
 		c = Checklist()
-		b  = Backend('host-8', 'default', 'default')
-		b1 = Backend('host-9', 'default', 'default')
+		b  = Backend('host-8', 'default', 'default', 'sles')
+		b1 = Backend('host-9', 'default', 'default', 'sles')
 		b.macList = ['aa:bb:aa:aa:bb:aa']
 		b.ipList  = ['8.8.8.8']
 		b1.macList = ['aa:bb:aa:aa:bb:ee']                
@@ -63,8 +63,8 @@ class TestChecklistMain:
 	def test_restoreDhcpMsgs(self):
 		sys.path.append('/opt/stack/bin')
 		c = Checklist()
-		b  = Backend('host-8', 'default', 'default')
-		b1 = Backend('host-9', 'default', 'default')
+		b  = Backend('host-8', 'default', 'default', 'sles')
+		b1 = Backend('host-9', 'default', 'default', 'sles')
 		b.macList = ['aa:bb:aa:aa:bb:aa']
 		b.ipList  = ['8.8.8.8']
 		b1.macList = ['aa:bb:aa:aa:bb:ee']

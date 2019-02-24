@@ -26,14 +26,14 @@ class TestChecklistDaemons:
 		logParser.processDhcp(s)
 		while not logParser.localQ.empty():
 			sm = logParser.localQ.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 		logParser.shutdownFlag.set()
 
 		while not q.empty():
 			sm = q.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 
@@ -55,15 +55,14 @@ class TestChecklistDaemons:
 		logParser.processTftp(s)
 		while not logParser.localQ.empty():
 			sm = logParser.localQ.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 		logParser.shutdownFlag.set()
 
 		while not q.empty():
 			sm = q.get()
-			print(sm)
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 
@@ -91,7 +90,7 @@ class TestChecklistDaemons:
 
 		while not matchedFlag and not q.empty():
 			sm = q.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 
 		assert matchedFlag == True
@@ -112,14 +111,14 @@ class TestChecklistDaemons:
 		logParser.parseAccessLog(s)
 		while not logParser.localQ.empty():
 			sm = logParser.localQ.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 		logParser.shutdownFlag.set()
 
 		while not matchedFlag and not q.empty():
 			sm = q.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 
 		assert matchedFlag == True
@@ -136,7 +135,7 @@ class TestChecklistDaemons:
 		sm1 = globalQ.get()
 		matchedFlag = False
 
-		if sm.isEqual(sm1):
+		if sm == sm1:
 			matchedFlag = True
 
 		qAdder.shutdownFlag.set()
@@ -170,7 +169,7 @@ class TestChecklistDaemons:
 			False, time.time(),
 			msg='Backend - /tmp/partition.xml - Present')
 		matchedFlag = False
-		if sm.isEqual(expectedSm):
+		if sm == expectedSm:
 			matchedFlag = True
 		tx.close()
 
@@ -206,7 +205,7 @@ class TestChecklistDaemons:
 				' InstallHash - SLES : 53b5479a9e9993070eb8d6a2b42f735d;' \
 				' InstallHash - profile : 3405f361f4569341bc9f8a922eafe00d')
 		matchedFlag = False
-		if sm.isEqual(expectedSm):
+		if sm == expectedSm:
 			matchedFlag = True
 		tx.close()
 

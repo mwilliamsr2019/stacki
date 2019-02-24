@@ -11,7 +11,7 @@ class Backend:
 	Object that encapsulates all backend attributes relevant
 	to monitor installation
 	"""
-	def __init__(self, hostName, installaction, osaction):
+	def __init__(self, hostName, installaction, osaction, os):
 		self.hostName = hostName
 		self.installaction = installaction
 		self.osaction = osaction
@@ -25,12 +25,14 @@ class Backend:
 		self.installKernel = None
 		self.installRamdisk = None
 		self.installArgs = None
+		self.os = os
 
 	def __str__(self):
 		l = []
 		l.append('########## Attributes of %s - Backend ###########' % self.hostName)
 		l.append('IP Addr = %s' % ','.join(self.ipList))
 		l.append('MAC = %s' % ','.join(self.macList))
+		l.append('OS = %s' % self.os)
 		l.append('OS Kernel = %s' % self.osKernel)
 		l.append('OS Ramdisk = %s' % self.osRamdisk)
 		l.append('OS Args = %s' % self.osArgs)
@@ -75,6 +77,7 @@ class Backend:
 	# Copy all attributes (except stateArr) from Backend object b
 	def copyAttributes(self, b):
 		self.hostName = b.hostName
+		self.os = b.os
 		self.installaction = b.installaction
 		self.osaction = b.osaction
 		self.ipList = b.ipList

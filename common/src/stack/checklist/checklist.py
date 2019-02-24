@@ -62,7 +62,7 @@ class Checklist(threading.Thread):
 		hnameBackendMap = {}
 		op = stack.api.Call('list.host')
 		for o in op:
-			b = Backend(o['host'], o['installaction'], o['osaction'])
+			b = Backend(o['host'], o['installaction'], o['osaction'], o['os'])
 			hnameBackendMap[o['host']] = b
 
 		return hnameBackendMap

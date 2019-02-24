@@ -5,7 +5,7 @@ import time
 class TestBackend:
 	
 	def test_isKnownState(self):
-		b = Backend('sd-stacki-111', 'default', 'default')
+		b = Backend('sd-stacki-111', 'default', 'default', 'sles')
 		sm1 = StateMessage('10.25.241.111', State.DHCPDISCOVER, False, time.time())
 		sm2 = StateMessage('10.25.241.111', State.Autoyast_Sent, False, time.time())
 		b.stateArr.append(sm1)
@@ -21,7 +21,7 @@ class TestBackend:
 		assert b.isKnownState(sm4.state) == False
 
 	def test_isPostPkgInstallStage(self):
-		b = Backend('sd-stacki-111', 'default', 'default')
+		b = Backend('sd-stacki-111', 'default', 'default', 'sles')
 		sm1 = StateMessage('10.25.241.111', State.DHCPDISCOVER, False, time.time())
 		sm2 = StateMessage('10.25.241.111', State.Autoyast_Sent, False, time.time())
 		b.stateArr.append(sm1)
@@ -35,7 +35,7 @@ class TestBackend:
 		assert b.isPostPkgInstallStage() == True
 
 	def test_lastSuccessfulState(self):
-		b = Backend('sd-stacki-111', 'default', 'default')
+		b = Backend('sd-stacki-111', 'default', 'default', 'sles')
 		assert b.lastSuccessfulState() == None
 
 		sm1 = StateMessage('10.25.241.111', State.DHCPDISCOVER, False, time.time())
@@ -47,7 +47,7 @@ class TestBackend:
 		assert b.lastSuccessfulState() == sm1
 
 	def test_copyAttributes(self):
-		b = Backend('sd-stacki-111', 'default', 'default')
+		b = Backend('sd-stacki-111', 'default', 'default', 'redhat')
 		sm1 = StateMessage('10.25.241.111', State.DHCPDISCOVER, False, time.time())
 		sm2 = StateMessage('10.25.241.111', State.Autoyast_Sent, False, time.time())
 		b.stateArr.append(sm1)
@@ -57,7 +57,7 @@ class TestBackend:
 		b.installKernel = 'kernel1'
 		b.installRamdisk = 'ramdisk1'
 
-		b1 = Backend('sd-stacki-112', 'default', 'default')
+		b1 = Backend('sd-stacki-112', 'default', 'default', 'redhat')
 		smb1 = StateMessage('10.25.241.112', State.DHCPOFFER, False, time.time())
 		b1.stateArr.append(smb1)
 		b1.ipList = ['10.25.241.112']

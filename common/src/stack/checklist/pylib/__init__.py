@@ -26,6 +26,7 @@ class Backend:
 		self.installRamdisk = None
 		self.installArgs = None
 		self.os = os
+		self.osversion = None
 
 	def __str__(self):
 		l = []
@@ -33,6 +34,7 @@ class Backend:
 		l.append('IP Addr = %s' % ','.join(self.ipList))
 		l.append('MAC = %s' % ','.join(self.macList))
 		l.append('OS = %s' % self.os)
+		l.append('OS Version = %s' % self.osversion)
 		l.append('OS Kernel = %s' % self.osKernel)
 		l.append('OS Ramdisk = %s' % self.osRamdisk)
 		l.append('OS Args = %s' % self.osArgs)
@@ -78,6 +80,7 @@ class Backend:
 	def copyAttributes(self, b):
 		self.hostName = b.hostName
 		self.os = b.os
+		self.osversion = b.osversion
 		self.installaction = b.installaction
 		self.osaction = b.osaction
 		self.ipList = b.ipList

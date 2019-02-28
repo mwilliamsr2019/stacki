@@ -30,6 +30,7 @@ class Checklist(threading.Thread):
 	def refreshBackendInfo(self):
 		hnameBackendMap = self.getHosts()
 		self.log.debug('List of hostnames = %s' % ','.join(hnameBackendMap.keys()))
+		self.getHostAttr(hnameBackendMap)
 		newIpBackendMap = self.getHostInterfaces(hnameBackendMap)
 
 		# Build a bootaction dictionary for ease of access
@@ -66,6 +67,13 @@ class Checklist(threading.Thread):
 			hnameBackendMap[o['host']] = b
 
 		return hnameBackendMap
+
+	def getHostAttr(self, hnameBackendMap):
+		op = stack.api.Call('list.host.attr', ['attr=os.version'])
+		for o in op:
+			host = o['host']
+			b = hnameBackendMap[host]
+			b.osversion = o['value']
 
 	# Get list of host interfaces
 	def getHostInterfaces(self, hnameBackendMap):
@@ -122,6 +130,7 @@ class Checklist(threading.Thread):
 	#
 	def getBackendInfo(self):
 		hnameBackendMap = self.getHosts()
+		self.getHostAttr(hnameBackendMap)
 		ipBackendMap = self.getHostInterfaces(hnameBackendMap)
 
 		# Build a bootaction dictionary for ease of access

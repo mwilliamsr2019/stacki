@@ -83,7 +83,7 @@ class TestChecklistDaemons:
 		logParser.parseSSLAccessLog(s)
 		while not logParser.localQ.empty():
 			sm = logParser.localQ.get()
-			if sm.isEqual(expectedStMsg):
+			if sm == expectedStMsg:
 				matchedFlag = True
 				break
 		logParser.shutdownFlag.set()

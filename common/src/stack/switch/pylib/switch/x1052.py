@@ -7,12 +7,21 @@ from . import Switch, SwitchException
 import os
 import time
 import pexpect
+from contextlib import suppress
+from stack.expectmore import ExpectMore, ExpectMoreException
 
 
 class SwitchDellX1052(Switch):
 	"""
 	Class for interfacing with a Dell x1052 switch.
 	"""
+
+	def __init__(self, *args, **kwargs):
+		"""Override __init__ to set up expectmore. Let the superclass __init__ do everything else."""
+		self.proc = ExpectMore(
+			prompts = ["console#", "console.config.#",]
+		)
+		super().__init__(*args, **kwargs)
 
 	def supported(*cls):
 		return [
@@ -22,29 +31,41 @@ class SwitchDellX1052(Switch):
 	def connect(self):
 		"""Connect to the switch"""
 		try:
-			self.child = pexpect.spawn('ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -tt ' +
-									   self.switch_ip_address)
-			self._expect('User Name:', 10)
-			self.child.sendline(self.username)
-			self._expect('Password:')
-			self.child.sendline(self.password)
-		except:
+			# Don't connect if we are already connected.
+			if self.proc.isalive():
+				return
+
+			self.proc.start(cmd = f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -tt {self.switch_ip_address}")
+			self.proc.conversation(
+				response_pairs = [
+					("User Name:", self.username),
+					("Password:", self.password),
+				]
+			)
+		except ExpectMoreException:
 			raise SwitchException("Couldn't connect to the switch")
 
 	def disconnect(self):
+		"""Disconnect from the switch if a connection is active."""
+		# if we've already disconnected, don't try again.
+		if not self.proc.isalive():
+			return
+
 		# q will exit out of an existing scrollable more/less type of prompt
 		# Probably not necessary, but a bit safer
+		self.proc.say(cmd = "q")
+		# We might be in a configure console, which means we'll need a second exit
+		# and expectmore wont find the EOF it is looking for this first time.
+		with suppress(ExpectMoreException):
+			self.proc.end(quit_cmd = "exit")
 
-		# if there isn't an exit status
-		# close the connection
-		if not self.child.exitstatus:
-			self.child.sendline("\nq\n")
-			# exit should cleanly exit the ssh
-			self.child.sendline("\nexit\n")
-			# Just give it a few seconds to exit gracefully before terminate.
-			time.sleep(3)
-			self.child.terminate()
-		
+		# Exit if we successfully shut down the process.
+		if not self.proc.isalive():
+			return
+
+		# Try one more time to quit because we might have been in the
+		# configure console.
+		self.proc.end(quit_cmd = "exit")
 
 	def _expect(self, look_for, custom_timeout=15):
 		try:
@@ -76,7 +97,7 @@ class SwitchDellX1052(Switch):
 			self.send_spacebar(4)
 			self.child.expect('console#', timeout=60)
 		self.child.logfile = None
-	
+
 	def parse_mac_address_table(self):
 		"""Parse the mac address table and return list of connected macs"""
 		_hosts = []
@@ -84,7 +105,7 @@ class SwitchDellX1052(Switch):
 			for line in f.readlines():
 				if 'dynamic' in line:
 					# appends line to list
-					# map just splits out the port 
+					# map just splits out the port
 					#   from the interface
 					_hosts.append(list(
 					  map(lambda x: x.split('/')[-1],
@@ -105,7 +126,7 @@ class SwitchDellX1052(Switch):
 			self.send_spacebar(4)
 			self.child.expect('console#', timeout=60)
 		self.child.logfile = None
-	
+
 	def parse_interface_status_table(self):
 		"""Parse the interface status and return list of port information"""
 		_hosts = []
@@ -113,7 +134,7 @@ class SwitchDellX1052(Switch):
 			for line in f.readlines():
 				if 'gi1/0/' in line:
 					# appends line to list
-					# map just splits out the port 
+					# map just splits out the port
 					#   from the interface
 					_hosts.append(list(
 					  map(lambda x: x.split('/')[-1],
